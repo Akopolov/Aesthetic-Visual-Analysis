@@ -1,7 +1,7 @@
 # Measuring Image Aesthetics with DL
 Neural networks(LTAT.02.001 University of Tartu) course group project repository. 
 
-The idea here is to use neural networks to predict how aesthetically pleasing images are. Of course, this is very subjective but there is some notion of beauty that is shared by most people. This project is to explore different methods to analyse aesthetics in images using the AVA dataset (~250K images).
+Use neural networks to predict how aesthetically pleasing images are. Of course, this is very subjective but there is some notion of beauty that is shared by most people. This project is to explore different methods to analyse aesthetics in images using the AVA dataset (~250K images).
 
 ### Project team members:
 * Aleksei Kopõlov
@@ -10,7 +10,7 @@ The idea here is to use neural networks to predict how aesthetically pleasing im
 # Dataset
 All the data was obtained from the following [link](http://academictorrents.com/details/71631f83b11d3d79d8f84efe0a7e12f0ac001460)
 
-## Data description
+## Dataset description
 AVA Dataset - June 2012 Release
 
 For detailed information, please refer to: “AVA: A Large-Scale Database for Aesthetic Visual Analysis”. Naila Murray, Luca Marchesotti, Florent Perronnin, CVPR 2012.
