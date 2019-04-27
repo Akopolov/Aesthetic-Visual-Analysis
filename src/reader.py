@@ -12,7 +12,7 @@ from src.util import progress
 from src.util import get_links_from_file
 
 class Reader(HTMLSession):
-    def __init__(self, img_width=256, img_height=256, batches=5, epochs=2)-> None:
+    def __init__(self, img_width=256, img_height=256, batches=100, epochs=10)-> None:
         super().__init__()
         self.base_url = "http://www.dpchallenge.com/image.php?IMAGE_ID="
         self.img_width = img_width
