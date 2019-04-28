@@ -57,7 +57,7 @@ class Downloader():
         logging.info("Run: {0}".format(datetime.datetime.fromtimestamp(time.time()).strftime('%d/%m/%Y %H:%M:%S')))
 
     def compress_images(self, img_map)->None:
-        tar_name = "data/images/{0}/{1}.tar.gz".format(self.challenger, "original")
+        tar_name = "data/images/original/{0}.tar.gz".format(self.challenger)
         current_image = 0
         image_list_size = len(img_map)
         if os.path.exists(tar_name):
@@ -72,7 +72,7 @@ class Downloader():
                 current_image+=1
             
     def create_dir(self)->None:
-        directory = "data/images/{0}".format(self.challenger)
+        directory = "data/images/original"
         if not os.path.exists(directory):
             os.makedirs(directory)
         
