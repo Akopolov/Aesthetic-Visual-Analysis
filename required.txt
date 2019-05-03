@@ -2,3 +2,4 @@ numpy
 requests-html
 Pillow
 opencv-python
+pandas
