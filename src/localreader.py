@@ -16,15 +16,16 @@ SHRINK = 'shrink'
 CENTERING = 'centering'
 
 class LocalReader():
-    def __init__(self, height=256, width=256, shaping=SHRINK, 
+    def __init__(self, height=256, width=256, validation_size=0.1 ,shaping=SHRINK, 
                  img_path='data/images/original', ava_path='data/AVA.txt')-> None:
         super().__init__()
+        self.validation_size = validation_size
         self.size = (width, height)
         self.shaping = shaping
         self.img_path = img_path
         self.ava_path = ava_path
 
-    def read(self, start=0, end=3)->Tuple:
+    def train(self, start=0, end=3)->Tuple:
         current=0
         for tar in os.listdir(self.img_path):
             if current == end:    
@@ -34,25 +35,46 @@ class LocalReader():
                 continue
             else:
                 current += 1
-                yield self.get_images(tar)
+                yield self.get_images(tar_name=tar, isValidation=False)
                 
-    def get_images(self, tar_name:str)->Tuple:
+    def validate(self, start=0, end=3)->Tuple:
+        current=0
+        for tar in os.listdir(self.img_path):
+            if current == end:    
+                break
+            elif current < start:
+                current += 1
+                continue
+            else:
+                current += 1
+                yield self.get_images(tar_name=tar, isValidation=True)
+                
+    def get_images(self, tar_name:str, isValidation:bool)->Tuple:
         images = []
         labels = []
         label_map = {}
         with tarfile.open(self.img_path + "/" + tar_name, "r:gz") as tar:
             label_map = self.get_scores(tar_name.split(".")[0])
             tar_size = len(tar.getmembers())
-            item = 0
-            for member in tar.getmembers():
-                file = tar.extractfile(member)
-                labels.append(label_map[member.name.split(".")[0]])
-                img = np.asarray(bytearray(file.read()), dtype="uint8")
-                images.append(self.procces_image(img))
-                progress(item, tar_size-1, status="{0}    ".format(tar_name))
-                item += 1
-            print()
-        return (np.array(images), np.array(labels))
+
+            start = 0
+            end = 0
+            
+            if(isValidation):
+                start = int(tar_size * (1 - self.validation_size))
+                end = tar_size
+            else:
+                start = 0
+                end = int(tar_size * (1 - self.validation_size))
+                
+            for count, member in enumerate(tar.getmembers()):
+                if(count>= start and count<end):                    
+                    file = tar.extractfile(member)
+                    labels.append(label_map[member.name.split(".")[0]])
+                    img = np.asarray(bytearray(file.read()), dtype="uint8")
+                    images.append(self.procces_image(img))
+                
+        return (np.array(images), np.array(getMean(labels)))
     
     def get_scores(self, challenge:str)->Dict:
         can_break = False
