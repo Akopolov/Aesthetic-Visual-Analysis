@@ -1,4 +1,3 @@
-import urllib.request
 import tarfile
 import time
 import os
@@ -9,9 +8,6 @@ import cv2 as cv
 from typing import List, Dict, Tuple
 from PIL import Image
 from io import BytesIO
-
-from src.util import progress
-from src.util import get_links_from_file
 
 SHRINK = 'shrink'
 CENTERING = 'centering'
