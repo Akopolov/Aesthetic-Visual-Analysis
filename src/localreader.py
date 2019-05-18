@@ -8,6 +8,7 @@ import cv2 as cv
 
 from typing import List, Dict, Tuple
 from PIL import Image
+from io import BytesIO
 
 from src.util import progress
 from src.util import get_links_from_file
@@ -24,30 +25,71 @@ class LocalReader():
         self.shaping = shaping
         self.img_path = img_path
         self.ava_path = ava_path
+        self.img_save_path = None
 
     def train(self, start=0, end=3)->Tuple:
-        current=0
-        for tar in os.listdir(self.img_path):
-            if current == end:    
+        for iteration, tar in enumerate(os.listdir(self.img_path)):
+            if iteration == end:    
                 break
-            elif current < start:
-                current += 1
+            elif iteration < start:
+                iteration += 1
                 continue
             else:
-                current += 1
+                iteration += 1
                 yield self.get_images(tar_name=tar, isValidation=False)
                 
     def validate(self, start=0, end=3)->Tuple:
-        current=0
-        for tar in os.listdir(self.img_path):
-            if current == end:    
+        for iteration, tar in enumerate(os.listdir(self.img_path)):
+            if iteration == end:    
                 break
-            elif current < start:
-                current += 1
+            elif iteration < start:
+                iteration += 1
                 continue
             else:
-                current += 1
+                iteration += 1
                 yield self.get_images(tar_name=tar, isValidation=True)
+                
+    def preprocess(self, start=0, end=3, img_save_path='data/images/')->None:
+        self.img_save_path = img_save_path + self.shaping
+        
+        if not os.path.exists(self.img_save_path):
+            os.makedirs(self.img_save_path)
+            
+        for iteration, tar in enumerate(os.listdir(self.img_path)):
+            temp_validation_size = self.validation_size
+            self.validation_size = 0.0
+            if iteration == end:    
+                break
+            elif iteration < start:
+                iteration += 1
+                continue
+            else:
+                iteration += 1
+                print("Iteration: {0}, {1}".format(iteration, tar))
+                self.save_images(tar_name=tar)
+        self.validation_size = temp_validation_size
+        
+    def save_images(self, tar_name)->None:
+        name_img_map = {}
+        old_tar_path = self.img_path + "/" + tar_name
+        new_tar_path = self.img_save_path + "/" + tar_name
+        
+        if os.path.exists(new_tar_path):
+            os.remove(new_tar_path)
+            
+        with tarfile.open(old_tar_path, "r:gz") as tar:
+            for member in tar.getmembers():
+                file = tar.extractfile(member)
+                img = np.asarray(bytearray(file.read()), dtype="uint8")
+                name_img_map[member.name] = self.procces_image(img)
+
+        with tarfile.open(new_tar_path, "w:gz") as tar:
+            for key in name_img_map.keys():
+                img = BytesIO()
+                Image.fromarray(name_img_map[key]).save(img, format='JPEG')
+                tarinfo = tarfile.TarInfo(name="{0}".format(key))
+                tarinfo.size = len(img.getvalue())
+                tar.addfile(tarinfo=tarinfo, fileobj=BytesIO(img.getvalue()))
                 
     def get_images(self, tar_name:str, isValidation:bool)->Tuple:
         images = []
