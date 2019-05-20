@@ -3,14 +3,14 @@ import time
 import os
 
 import numpy as np
-import cv2 as cv
 
 from typing import List, Dict, Tuple
+from random import randint
 from PIL import Image
 from io import BytesIO
 
 SHRINK = 'shrink'
-CENTERING = 'centering'
+CROP = 'crop'
 
 class LocalReader():
     def __init__(self, height=256, width=256, validation_size=0.1 ,shaping=SHRINK, 
@@ -76,8 +76,7 @@ class LocalReader():
         with tarfile.open(old_tar_path, "r:gz") as tar:
             for member in tar.getmembers():
                 file = tar.extractfile(member)
-                img = np.asarray(bytearray(file.read()), dtype="uint8")
-                name_img_map[member.name] = self.procces_image(img)
+                name_img_map[member.name] = self.procces_image(file)
 
         with tarfile.open(new_tar_path, "w:gz") as tar:
             for key in name_img_map.keys():
@@ -109,9 +108,8 @@ class LocalReader():
                 if(count>= start and count<end):                    
                     file = tar.extractfile(member)
                     labels.append(label_map[member.name.split(".")[0]])
-                    img = np.asarray(bytearray(file.read()), dtype="uint8")
-                    images.append(self.procces_image(img))
-                
+                    images.append(self.procces_image(file))
+                    
         return (np.array(images), np.array(getMean(labels)))
     
     def get_scores(self, challenge:str)->Dict:
@@ -127,18 +125,27 @@ class LocalReader():
                     return score_map
             return score_map
     
-    def procces_image(self, img)->np.ndarray:
-        img = cv.imdecode(img, cv.IMREAD_COLOR)
+    def procces_image(self, file)->np.ndarray:
+        img = Image.open(BytesIO(np.asarray(bytearray(file.read()), dtype="uint8")))
+        
+        if(img.mode != 'RGB'):
+            img = img.convert('RGB')
+            
         if self.shaping == SHRINK:
-            return cv.resize(img, self.size)
-        elif self.shaping == CENTERING:
-            #TODO: Finish Centring
-            print(img.shape)
-            width = int(img.shape[0]/2) - int(self.size[0]/2)
-            height = int(img.shape[1]/2) - int(self.size[1]/2)
-            img = img[width:width+self.size[0], height:height+self.size[1]] 
-            print(img.shape)
-            return img
+            img = img.resize(self.size)
+        elif self.shaping == CROP:
+            if(img.size[0] < self.size[0]):
+                img = img.resize((self.size[0], img.size[1]))
+                
+            if(img.size[1] < self.size[1]):
+                img = img.resize((img.size[0], self.size[1]))
+                
+            max_delta_size = (img.size[0] - self.size[0], img.size[1] - self.size[1])
+            delta_size = (randint(0, max_delta_size[0]), randint(0, max_delta_size[1]))
+            box = (delta_size[0], delta_size[1], delta_size[0] + self.size[0], delta_size[1] + self.size[1])
+            img = img.crop(box)
+
+        return np.array(img)
 
 def mean_function(labels):
     result = 0

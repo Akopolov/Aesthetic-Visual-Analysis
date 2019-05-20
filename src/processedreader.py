@@ -3,13 +3,15 @@ import time
 import os
 
 import numpy as np
+import cv2 as cv
 
 from typing import List, Dict, Tuple
+from random import randint
 from PIL import Image
 from io import BytesIO
 
 SHRINK = 'shrink'
-CENTERING = 'centering'
+CROP = 'crop'
 
 class ProcessedReader():
     def __init__(self, validation_size=0.1 ,shaping=SHRINK, 
