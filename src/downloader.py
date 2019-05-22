@@ -41,10 +41,12 @@ class Downloader():
             for link in links:
                 progress(current_download, download_size-1, 
                          status="Downloading Iteration: {0}, Image id: {1}".format(self.iteration, link["id"]))
-                images.append({
-                    "id": link["id"],
-                    "img":self.get_image(link["link"])
-                })
+                image = self.get_image(link["link"])
+                if image != None:
+                    images.append({
+                        "id": link["id"],
+                        "img": image
+                    })
                 current_download += 1
             self.compress_images(images)
             logging.info("END --- Iteration: {0}, Challenge: {1}, Tottal size:{2}"
@@ -111,5 +113,8 @@ class Downloader():
                         self.iteration += 1
 
     def get_image(self, link:str)->bytes:
-        with urllib.request.urlopen(link) as response:
-            return response.read()
+        try:
+            with urllib.request.urlopen(link) as response:
+                return response.read()
+        except urllib.error.HTTPError as err:
+            return None
